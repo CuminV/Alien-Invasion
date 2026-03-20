@@ -8,7 +8,7 @@ class Bullet(Sprite):
         super().__init__()
         self.screen = ai_game.screen
         self.settings = ai_game.settings
-        self.image = pygame.image.load('Alien Invasion/images/bullet.bmp')
+        self.image = pygame.image.load('images/bullet.bmp')
         
         self.rect = self.image.get_rect()
         self.rect.midtop = ai_game.ship.rect.midtop
