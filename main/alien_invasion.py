@@ -40,11 +40,14 @@ class AlienInvasion:
         
         while True:
             self._check_events()
-            self.ship.update()
-            self._update_bullets()
-            self._update_aliens()
-            self._update_screen()
             
+            if self.stats.game_active:
+                self.ship.update()
+                self._update_bullets()
+                self._update_aliens()
+            
+            self._update_screen()
+                
             
             
     def _check_events(self):
@@ -97,6 +100,7 @@ class AlienInvasion:
         colisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, True, True)
         if colisions:
+            self.stats.alien_dead += 1
             self.settings.sound_explosion.play()
         
         
@@ -109,9 +113,10 @@ class AlienInvasion:
         self._check_fleet_edges()
         self.aliens.update()
         
+        
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
             self.ship_hit()
-    
+            self._check_aliens_bottom()
           
     def _create_fleet(self):
         alien = Alien(self)
@@ -151,12 +156,24 @@ class AlienInvasion:
         
      
     def ship_hit(self):
-        self.stats.ship_left -= 1
-        self.aliens.empty()
-        self.bullets.empty()  
-        self._create_fleet()
-        self.ship.center_ship()
-        sleep(0.5)
+        if self.stats.ship_left > 0:
+            self.stats.ship_left -= 1
+            self.aliens.empty()
+            self.bullets.empty()  
+            self._create_fleet()
+            self.ship.center_ship()
+            sleep(1)
+        else:
+            print(f'You dead alien: {self.stats.alien_dead}')
+            self.stats.game_active = False
+            
+        
+    def _check_aliens_bottom(self):
+        screen_rect = self.screen.get_rect()
+        for alien in self.aliens.sprites():
+            if alien.rect.bottom >= screen_rect.bottom:
+                self.ship_hit()
+                break
                     
     def _update_screen(self):        
         self.screen.blit(self.settings.background, (0,0))  
