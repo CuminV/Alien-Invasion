@@ -1,9 +1,10 @@
 import sys
-
+from time import sleep
 import pygame
 
 
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -16,13 +17,15 @@ class AlienInvasion:
         pygame.init()
         pygame.mixer.init()
         self.settings = Settings()
-        
+    
         pygame.mixer.music.load('sound/theme.mp3')
         pygame.mixer.music.play(-1)
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Alien Invation")
+        
+        self.stats = GameStats(self)
         
         self.ship = Ship(self)
         
@@ -62,7 +65,7 @@ class AlienInvasion:
             self.ship.moving_left = True
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
-            self.settings.sound_laser.play()
+            
         elif event.key == pygame.K_q:
             sys.exit()
         
@@ -76,6 +79,7 @@ class AlienInvasion:
         if len(self.bullets) < self.settings.bullets_allowed:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)               
+            self.settings.sound_laser.play()
     
     
     def _update_bullets(self):
@@ -104,6 +108,9 @@ class AlienInvasion:
     def _update_aliens(self):
         self._check_fleet_edges()
         self.aliens.update()
+        
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self.ship_hit()
     
           
     def _create_fleet(self):
@@ -120,9 +127,7 @@ class AlienInvasion:
             for alien_number in range(number_aliens_x):
                 self._create_alien(alien_number, row_number)
                 
-            
-           
-              
+               
     def _create_alien(self, alien_number, row_number):
         alien = Alien(self)
         alien_width, alien_height = alien.rect.size
@@ -144,6 +149,14 @@ class AlienInvasion:
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
         
+     
+    def ship_hit(self):
+        self.stats.ship_left -= 1
+        self.aliens.empty()
+        self.bullets.empty()  
+        self._create_fleet()
+        self.ship.center_ship()
+        sleep(0.5)
                     
     def _update_screen(self):        
         self.screen.blit(self.settings.background, (0,0))  

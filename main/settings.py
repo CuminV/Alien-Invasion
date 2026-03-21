@@ -10,18 +10,19 @@ class Settings():
         self.background = pygame.image.load('images/starsky.bmp')
         
         #Ship settings
-        self.ship_speed = 1.5
+        self.ship_speed = 2
+        self.ship_limit = 3
         
         #Bullet settings
         self.bullet = pygame.image.load('images/bullet.bmp')
-        self.bullet_speed = 2
+        self.bullet_speed = 3
         self.bullet_wigth = 50
         self.bullet_height = 50
         self.bullet_color = (235, 9, 9)
         self.bullets_allowed = 3
         
         #Alien settings
-        self.alien_speed = 0.75
+        self.alien_speed = 1
         self.fleet_drop_speed = 30
         self.fleet_direction = 1
         
