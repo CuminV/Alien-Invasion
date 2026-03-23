@@ -73,7 +73,7 @@ class AlienInvasion:
             self.stats.game_active = True
             self.aliens.empty()
             self.bullets.empty()
-            
+            self.settings.initialize_dynamic_settings()
             self._create_fleet()
             self.ship.center_ship()
             pygame.mouse.set_visible(False)
@@ -125,7 +125,7 @@ class AlienInvasion:
         if not self.aliens:
             self.bullets.empty()
             self._create_fleet()
-          
+            self.settings.increase_speed()
           
     
     def _update_aliens(self):
