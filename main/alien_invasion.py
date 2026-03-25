@@ -11,22 +11,22 @@ from alien import Alien
 from button import Button
 from scoreboard import Scoreboard
 
+
 class AlienInvasion:
     """A class for managing game resources and behavior."""
     
-    def __init__(self):
+    def __init__(self, screen):
         """Initialization game and create game resurses"""
-        pygame.init()
         pygame.mixer.init()
+        self.screen = screen
         self.settings = Settings()
     
         pygame.mixer.music.load('sound/theme.mp3')
         pygame.mixer.music.play(-1)
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Alien Invation")
-        
+     
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
         
@@ -40,26 +40,21 @@ class AlienInvasion:
         
         self.play_button = Button(self, 'Play')
 
-    def run_game(self):
-        """Start main cycle"""
+    def update(self):
+        if self.stats.game_active:
+            self.ship.update()
+            self._update_bullets()
+            self._update_aliens()
+    
+    
+    def draw(self):
         
-        while True:
-            self._check_events()
-            
-            if self.stats.game_active:
-                self.ship.update()
-                self._update_bullets()
-                self._update_aliens()
-            
-            self._update_screen()
+        self._update_screen()
                 
-            
-            
-    def _check_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
+              
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
