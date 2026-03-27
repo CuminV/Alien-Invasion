@@ -2,7 +2,6 @@ import sys
 from time import sleep
 import pygame
 
-
 from settings import Settings
 from game_stats import GameStats
 from ship import Ship
@@ -10,21 +9,21 @@ from bullet import Bullet
 from alien import Alien
 from button import Button
 from scoreboard import Scoreboard
-
+from config import Config
 
 class AlienInvasion:
     """A class for managing game resources and behavior."""
     
-    def __init__(self, screen):
+    def __init__(self, screen, config=None):
         """Initialization game and create game resurses"""
         pygame.mixer.init()
         self.screen = screen
-        self.settings = Settings()
+        self.config = config or Config()
+        self.settings = Settings(self.config)
     
         pygame.mixer.music.load('sound/theme.mp3')
         pygame.mixer.music.play(-1)
-        self.settings.screen_width = self.screen.get_rect().width
-        self.settings.screen_height = self.screen.get_rect().height
+        pygame.mixer.music.set_volume(self.config.music_volume / 100)
         pygame.display.set_caption("Alien Invation")
      
         self.stats = GameStats(self)
@@ -38,7 +37,8 @@ class AlienInvasion:
         
         self._create_fleet()
         
-        self.play_button = Button(self, 'Play')
+        self.play_button = Button(self, 'Restart')
+        self.apply_new_resolution()
 
     def update(self):
         if self.stats.game_active:
@@ -200,6 +200,35 @@ class AlienInvasion:
             if alien.rect.bottom >= screen_rect.bottom:
                 self._ship_hit()
                 break
+    def apply_new_resolution(self):
+        screen_rect = self.screen.get_rect()
+        self.settings.apply_config()
+        self.settings.screen_width = screen_rect.width
+        self.settings.screen_height = screen_rect.height
+        self.settings.background = pygame.transform.scale(
+            self.settings._background_source,
+            (screen_rect.width, screen_rect.height),
+        )
+
+        self.ship.screen = self.screen
+        self.ship.screen_rect = screen_rect
+        self.ship.center_ship()
+
+        self.sb.screen = self.screen
+        self.sb.screen_rect = screen_rect
+        self.sb.prep_score()
+        self.sb.prep_high_score()
+        self.sb.prep_level()
+        self.sb.prep_ships()
+
+        self.play_button.screen = self.screen
+        self.play_button.screen_rect = screen_rect
+        self.play_button.rect.center = screen_rect.center
+        self.play_button.msg_image_rect.center = self.play_button.rect.center
+
+        self.aliens.empty()
+        self._create_fleet()
+      
                     
     def _update_screen(self):        
         self.screen.blit(self.settings.background, (0,0))  
@@ -214,6 +243,3 @@ class AlienInvasion:
         
    
         
-if __name__ == '__main__':
-    ai_game = AlienInvasion()
-    ai_game.run_game()
