@@ -15,16 +15,11 @@ class AlienInvasion:
     """A class for managing game resources and behavior."""
     
     def __init__(self, screen, config=None):
-        """Initialization game and create game resurses"""
         pygame.mixer.init()
         self.screen = screen
         self.config = config or Config()
         self.settings = Settings(self.config)
-    
-        pygame.mixer.music.load('sound/theme.mp3')
-        pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(self.config.music_volume / 100)
-        pygame.display.set_caption("Alien Invation")
+        pygame.display.set_caption("Alien Invasion")
      
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
@@ -36,10 +31,17 @@ class AlienInvasion:
         self.aliens = pygame.sprite.Group() 
         
         self._create_fleet()
-        
+        self._setup_audio()
         self.play_button = Button(self, 'Restart')
         self.apply_new_resolution()
 
+
+    def _setup_audio(self):
+        pygame.mixer.music.load('sound/theme.mp3')
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(self.config.music_volume / 100)
+    
+    
     def update(self):
         if self.stats.game_active:
             self.ship.update()
@@ -63,22 +65,30 @@ class AlienInvasion:
                 self._check_play_button(mouse_pos)
     
     
+    def reset_level_state(self):
+        self.aliens.empty()
+        self.bullets.empty()
+        self._create_fleet()
+        self.ship.center_ship()
+    
+    
+    def reset_game_state(self):
+        self.stats.reset_stats()
+        self.stats.game_active = True
+        self.sb.prep_score()
+        self.sb.prep_level()
+        self.sb.prep_ships()
+        self.settings.initialize_dynamic_settings()
+        self.reset_level_state()
+        pygame.mouse.set_visible(False)
+    
+    
     def _check_play_button(self, mouse_pos):
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if button_clicked and not self.stats.game_active:
-            self.stats.reset_stats()
-            self.stats.game_active = True
-            self.sb.prep_score()
-            self.sb.prep_level()
-            self.sb.prep_ships()
-            self.aliens.empty()
-            self.bullets.empty()
-            self.settings.initialize_dynamic_settings()
-            self._create_fleet()
-            self.ship.center_ship()
-            pygame.mouse.set_visible(False)
-            
-            
+            self.reset_game_state()
+
+
     def _check_keydown_events(self, event):
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = True
@@ -89,12 +99,14 @@ class AlienInvasion:
             
         elif event.key == pygame.K_q:
             sys.exit()
+       
         
     def _check_keyup_events(self, event):
         if event.key == pygame.K_RIGHT:
-                self.ship.moving_right = False
+            self.ship.moving_right = False
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = False
+       
                     
     def _fire_bullet(self):
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -111,37 +123,39 @@ class AlienInvasion:
                     self.bullets.remove(bullet)
                     
                     
-        self._check_bullet_alien_colisions()
+        self._check_bullet_alien_collisions()
         
         
-    def _check_bullet_alien_colisions(self):
-        colisions = pygame.sprite.groupcollide(
+    def start_new_level(self):
+        self.bullets.empty()
+        self._create_fleet()
+        self.settings.increase_speed()
+        self.stats.level += 1
+        self.sb.prep_level()    
+    
+    
+    def _check_bullet_alien_collisions(self):
+        collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, True, True)
-        if colisions:
-            for aliens in colisions.values():
+        if collisions:
+            for aliens in collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
                 self.settings.sound_explosion.play()
             self.sb.prep_score()
             self.sb.check_high_score()
               
-        
-        
         if not self.aliens:
-            self.bullets.empty()
-            self._create_fleet()
-            self.settings.increase_speed()
-            self.stats.level += 1
-            self.sb.prep_level() 
+           self.start_new_level()
           
      
     def _update_aliens(self):
         self._check_fleet_edges()
         self.aliens.update()
         
-        
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
             self._ship_hit()
-            self._check_aliens_bottom()
+        self._check_aliens_bottom()
+        
           
     def _create_fleet(self):
         alien = Alien(self)
@@ -184,10 +198,7 @@ class AlienInvasion:
         if self.stats.ship_left > 0:
             self.stats.ship_left -= 1
             self.sb.prep_ships()
-            self.aliens.empty()
-            self.bullets.empty()  
-            self._create_fleet()
-            self.ship.center_ship()
+            self.reset_level_state()
             sleep(1)
         else:
             self.stats.game_active = False
@@ -200,6 +211,8 @@ class AlienInvasion:
             if alien.rect.bottom >= screen_rect.bottom:
                 self._ship_hit()
                 break
+            
+            
     def apply_new_resolution(self):
         screen_rect = self.screen.get_rect()
         self.settings.apply_config()

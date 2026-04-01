@@ -8,7 +8,6 @@ class Config:
         # Config file
         self.config_file = 'config.json'
         
-        
         # Video
         self.width = 1920
         self.height = 1080
@@ -27,37 +26,32 @@ class Config:
     def resolution(self):
         return (self.width, self.height)
 
-    
-
 
     def to_dict(self):
-        
-        user_config = {'width' : self.width, 
-                       'height' : self.height, 
-                       'display_mode' : self.display_mode,
-                       'music_volume' : self.music_volume, 
-                       'sfx_volume' : self.sfx_volume, 
-                       'difficulty' : self.difficulty,
-                      }
-        
-        return user_config
+        return {'width': self.width, 
+                'height': self.height, 
+                'display_mode': self.display_mode,
+                'music_volume': self.music_volume, 
+                'sfx_volume': self.sfx_volume, 
+                'difficulty': self.difficulty,
+            }
     
-    
-    def save(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self.to_dict(), f)
-            
-            
+     
     def load(self):
         try:
             with open(self.config_file, 'r') as f:
                 user_config = json.load(f)
-        except FileNotFoundError : 
+        except FileNotFoundError: 
             return
-        else:
-            self.width = user_config['width']
-            self.height = user_config['height']
-            self.display_mode = user_config['display_mode']
-            self.music_volume = user_config['music_volume']
-            self.sfx_volume = user_config['sfx_volume']
-            self.difficulty = user_config['difficulty']
+        
+        self.width = user_config['width']
+        self.height = user_config['height']
+        self.display_mode = user_config['display_mode']
+        self.music_volume = user_config['music_volume']            
+        self.sfx_volume = user_config['sfx_volume']
+        self.difficulty = user_config['difficulty']
+     
+            
+    def save(self):
+        with open(self.config_file, 'w') as f:
+            json.dump(self.to_dict(), f)

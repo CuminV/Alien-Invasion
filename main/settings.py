@@ -3,6 +3,13 @@ import pygame
 class Settings:
     """Runtime game settings and loaded resources."""
 
+    DIFFICULTY_PRESETS = {
+        'easy': (1.5, 1.0, 3.0),
+        'medium': (2.5, 2.0, 5.0),
+        'hard': (3.5, 3.0, 7.0),
+    }   
+
+
     def __init__(self, config):
         self.config = config
 
@@ -20,7 +27,7 @@ class Settings:
         self.ship_limit = 3
 
         # Bullet settings
-        self.bullet_wigth = 50
+        self.bullet_width = 50
         self.bullet_height = 50
         self.bullets_allowed = 3
 
@@ -38,6 +45,7 @@ class Settings:
         self.apply_config()
         self.initialize_dynamic_settings()
 
+
     def apply_config(self):
         self.screen_width = self.config.width
         self.screen_height = self.config.height
@@ -51,15 +59,11 @@ class Settings:
         self.sound_laser.set_volume(normalized_sfx_volume)
         self.sound_explosion.set_volume(normalized_sfx_volume)
 
+
     def initialize_dynamic_settings(self):
-        difficulty_presets = {
-            'easy': (1.5, 1.0, 3.0),
-            'medium': (2.5, 2.0, 5.0),
-            'hard': (3.5, 3.0, 7.0),
-        }
-        ship_speed, alien_speed, bullet_speed = difficulty_presets.get(
+        ship_speed, alien_speed, bullet_speed = self.DIFFICULTY_PRESETS.get(
             self.config.difficulty,
-            difficulty_presets['medium'],
+            self.DIFFICULTY_PRESETS['medium'],
         )
 
         # Ship settings
@@ -74,6 +78,7 @@ class Settings:
 
         # Score
         self.alien_points = 50
+
 
     def increase_speed(self):
         self.alien_points = int(self.alien_points * self.score_scale)
